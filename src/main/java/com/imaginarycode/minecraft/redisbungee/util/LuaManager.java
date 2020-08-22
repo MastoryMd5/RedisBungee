@@ -31,11 +31,10 @@ public class LuaManager {
                 try {
                     data = jedis.evalsha(hashed, keys, args);
                 } catch (JedisDataException e) {
-                    if (e.getMessage().startsWith("NOSCRIPT")) {
+                    if (e.getMessage().startsWith("NOSCRIPT"))
                         data = jedis.eval(script, keys, args);
-                    } else {
+                    else
                         throw e;
-                    }
                 }
             }
 

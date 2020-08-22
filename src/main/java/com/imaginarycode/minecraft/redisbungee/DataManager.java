@@ -1,16 +1,16 @@
 package com.imaginarycode.minecraft.redisbungee;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.net.InetAddresses;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.imaginarycode.minecraft.redisbungee.events.PlayerChangedServerNetworkEvent;
 import com.imaginarycode.minecraft.redisbungee.events.PlayerJoinedNetworkEvent;
 import com.imaginarycode.minecraft.redisbungee.events.PlayerLeftNetworkEvent;
 import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.cache.Cache;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.cache.CacheBuilder;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.net.InetAddresses;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.util.concurrent.UncheckedExecutionException;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.gson.JsonObject;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.gson.JsonParser;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -181,12 +181,9 @@ public class DataManager implements Listener {
                 proxyCache.put(message1.getTarget(), message1.getSource());
                 lastOnlineCache.put(message1.getTarget(), (long) 0);
                 ipCache.put(message1.getTarget(), message1.getPayload().getAddress());
-                plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getProxy().getPluginManager().callEvent(new PlayerJoinedNetworkEvent(message1.getTarget()));
-                    }
-                });
+                plugin.getProxy().getScheduler().runAsync(plugin, () ->
+                        plugin.getProxy().getPluginManager().callEvent(new PlayerJoinedNetworkEvent(message1.getTarget()))
+                );
                 break;
             case LEAVE:
                 final DataManagerMessage<LogoutPayload> message2 = RedisBungee.getGson().fromJson(jsonObject, new TypeToken<DataManagerMessage<LogoutPayload>>() {

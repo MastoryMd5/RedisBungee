@@ -1,9 +1,9 @@
 package com.imaginarycode.minecraft.redisbungee;
 
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.base.Preconditions;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.ImmutableList;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.ImmutableSet;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.Multimap;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import lombok.NonNull;
 import net.md_5.bungee.api.config.ServerInfo;
 
@@ -224,9 +224,8 @@ public class RedisBungeeAPI {
      * @since 0.3
      */
     public final void unregisterPubSubChannels(String... channels) {
-        for (String channel : channels) {
+        for (String channel : channels)
             Preconditions.checkArgument(!reservedChannels.contains(channel), "attempting to unregister internal channel");
-        }
 
         RedisBungee.getPubSubListener().removeChannel(channels);
     }

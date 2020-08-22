@@ -1,21 +1,20 @@
 package com.imaginarycode.minecraft.redisbungee;
 
+import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.io.ByteStreams;
+import com.google.gson.Gson;
 import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
 import com.imaginarycode.minecraft.redisbungee.util.IOUtil;
 import com.imaginarycode.minecraft.redisbungee.util.LuaManager;
 import com.imaginarycode.minecraft.redisbungee.util.uuid.NameFetcher;
 import com.imaginarycode.minecraft.redisbungee.util.uuid.UUIDFetcher;
 import com.imaginarycode.minecraft.redisbungee.util.uuid.UUIDTranslator;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.cache.Cache;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.cache.CacheBuilder;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.ImmutableList;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.ImmutableMultimap;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.ImmutableSet;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.collect.Multimap;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.common.io.ByteStreams;
-import dev.luckynetwork.alviann.luckyinjector.lib.google.gson.Gson;
-import dev.luckynetwork.alviann.luckyinjector.lib.okhttp3.Dispatcher;
-import dev.luckynetwork.alviann.luckyinjector.lib.okhttp3.OkHttpClient;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +25,8 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
@@ -36,8 +37,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-import static dev.luckynetwork.alviann.luckyinjector.lib.google.common.base.Preconditions.checkArgument;
-
 /**
  * The RedisBungee plugin.
  * <p>
@@ -45,14 +44,21 @@ import static dev.luckynetwork.alviann.luckyinjector.lib.google.common.base.Prec
  */
 public final class RedisBungee extends Plugin {
 
-    @Getter private static final Gson gson = new Gson();
+    @Getter
+    private static final Gson gson = new Gson();
     private static RedisBungeeAPI api;
-    @Getter(AccessLevel.PACKAGE) private static PubSubListener psl = null;
-    @Getter private JedisPool pool;
-    @Getter private UUIDTranslator uuidTranslator;
-    @Getter(AccessLevel.PACKAGE) private static RedisBungeeConfiguration configuration;
-    @Getter private DataManager dataManager;
-    @Getter private static OkHttpClient httpClient;
+    @Getter(AccessLevel.PACKAGE)
+    private static PubSubListener psl = null;
+    @Getter
+    private JedisPool pool;
+    @Getter
+    private UUIDTranslator uuidTranslator;
+    @Getter(AccessLevel.PACKAGE)
+    private static RedisBungeeConfiguration configuration;
+    @Getter
+    private DataManager dataManager;
+    @Getter
+    private static OkHttpClient httpClient;
     private volatile List<String> serverIds;
     private final AtomicInteger nagAboutServers = new AtomicInteger();
     private final AtomicInteger globalPlayerCount = new AtomicInteger();
@@ -114,13 +120,14 @@ public final class RedisBungee extends Plugin {
     }
 
     public Set<UUID> getPlayersOnProxy(String server) {
-        checkArgument(getServerIds().contains(server), server + " is not a valid proxy ID");
+        Preconditions.checkArgument(getServerIds().contains(server), server + " is not a valid proxy ID");
         try (Jedis jedis = pool.getResource()) {
             Set<String> users = jedis.smembers("proxy:" + server + ":usersOnline");
             ImmutableSet.Builder<UUID> builder = ImmutableSet.builder();
-            for (String user : users) {
+
+            for (String user : users)
                 builder.add(UUID.fromString(user));
-            }
+
             return builder.build();
         }
     }
@@ -196,7 +203,7 @@ public final class RedisBungee extends Plugin {
     }
 
     final void sendProxyCommand(@NonNull String proxyId, @NonNull String command) {
-        checkArgument(getServerIds().contains(proxyId) || proxyId.equals("allservers"), "proxyId is invalid");
+        Preconditions.checkArgument(getServerIds().contains(proxyId) || proxyId.equals("allservers"), "proxyId is invalid");
         sendChannelMessage("redisbungee-" + proxyId, command);
     }
 
@@ -545,7 +552,8 @@ public final class RedisBungee extends Plugin {
     private class JedisPubSubHandler extends JedisPubSub {
         @Override
         public void onMessage(final String s, final String s2) {
-            if (s2.trim().length() == 0) return;
+            if (s2.trim().length() == 0)
+                return;
             getProxy().getScheduler().runAsync(RedisBungee.this, () -> getProxy().getPluginManager().callEvent(new PubSubMessageEvent(s, s2)));
         }
     }
